@@ -15,6 +15,11 @@ const User = db.define("user", {
 });
 
 // const User = db.define('user', {
+//     id: {
+//         type: DataTypes.INTEGER,
+//         allowNull: false,
+//         primaryKey: true
+//     },
 //     firstName:{
 //         type: DataTypes.STRING,
 //         allowNull: false
