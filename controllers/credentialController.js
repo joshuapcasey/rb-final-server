@@ -1,6 +1,7 @@
 const Express = require('express');
 const router = Express.Router();
 const validateSession = require('../middleware/validate-session');
+const validateRole = require('../middleware/validate-role');
 const { CredentialModel } = require('../models');
 
 router.get("/practice", validateSession, (req, res) => {
@@ -8,16 +9,16 @@ router.get("/practice", validateSession, (req, res) => {
 });
 
 
-//! REFACTOR ROUTES FOR SPECIFIC APP USAGE (COPIED FROM WORKOUT LOG)
-//post new log (req authorization)
+//! REFACTOR ROUTES FOR SPECIFIC APP USAGE 
+//post new credential (req authorization)
 router.post('/create', validateSession, async(req, res) =>{
-    const { description, definition, result } = req.body;
+    const { npi, med_school, licenses, specialty  } = req.body;
     const { id } = req.user;
     const logEntry = {
-        description,
-        definition,
-        result,
-        owner_id: id
+        npi,
+        med_school,
+        licenses,
+        specialty,
     }
     try {
         const newLog = await LogModel.create(logEntry);
