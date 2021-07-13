@@ -9,94 +9,121 @@ router.get("/practice", validateSession, (req, res) => {
 });
 
 
-//! REFACTOR ROUTES FOR SPECIFIC APP USAGE 
+// ! authenticated routes
+
 //post new credential (req authorization)
 router.post('/create', validateSession, async(req, res) =>{
+    const { id, fullName } = req.user;
     const { npi, med_school, licenses, specialty  } = req.body;
-    const { id } = req.user;
-    const logEntry = {
+    const credEntry = {
         npi,
         med_school,
         licenses,
         specialty,
+        bio,
+        userId: id,
+        posterName: fullName
     }
     try {
-        const newLog = await LogModel.create(logEntry);
-        res.status(200).json(newLog);
+        const newCred = await CredentialModel.create(credEntry);
+        res.status(200).json(newCred);
     } catch (err) {
         res.status(500).json({ msg: `Oh no! Server error: ${err}`})
     }
 });
 
-// find all logs from given user 
-router.get('/mine', validateSession, async(req, res)=>{
-    try{
-        const id = req.user.id;
-        const userLogs = await LogModel.findAll({
-            where: {owner_id: id}
+// find all credentials from given user 
+router.get('/profile/user/:userId', validateSession, async(req, res)=>{
+    const { userId } = req.params
+    try {
+        const userCred = await CredentialModel.findAll({
+            where: {userId: userId},
         });
-        res.status(200).json(userLogs)
+        res.status(200).json({userCred})
     } catch (err) {
-        res.status(500).json({ error: err})
+        res.status(500).json({msg: `Oh no, server error: ${err}`})
     }
 })
 
-//find specific log from specific user (log id goes in address, owner id goes in body)
-router.get('/:id', async(req,res)=>{
-    try {
-        const { ownerId } = req.body;
-        const { id } = req.params;
-        const specificLog = await LogModel.findOne({
-            where: {owner_id: ownerId, id: id}
-        });
-        res.status(200).json(specificLog)
-        
-    } catch (err) {
-        res.status(500).json({ error: err})
-    }
-})
-
-// update individual logs (doesn't require user to be the same, i.e. any user can update anyones logs)
-router.put('/:id', validateSession, async(req, res)=>{
-    const { description, definition, result } = req.body;
-    // const logId = req.params.entryId;
-    // const ownerId = req.user.id;
+// update credential by USER
+router.put('/edit/:credId', validateSession, async (req, res) => {
+    const { npi, med_school, licenses, specialty, bio } = req.body;
+    const { id } = req.user;
+    const { credId } = req.params
 
     try {
-        const updatedLog = await LogModel.update({ description, definition, result}, {where: {id: req.params.id}});
-        res.status(200).json({
-            msg: `log updated!`,
-            updatedLog
-        });
-    } catch (err) {
-        res.status(500).json({error: err})
-    }
-});
-
-//delete log
-router.delete('/:id', validateSession, async(req, res)=>{
-    try{
-        const locatedLog = await LogModel.destroy({
-            where: {id: req.params.id}
-        })
-        res.status(200).json({
-            message: 'Log successfully deleted',
-            deletedLog: locatedLog
+        const updatedCred = await CredentialModel.update({
+            npi,
+            med_school,
+            licenses,
+            specialty,
+            bio,
+        }, { where: { userId: id, id: credId } });
+            res.status(200).json({
+                msg: `Credential updated`,
+                updatedCred: updatedCred == 0? `none` : updatedCred
             })
-    } catch(err) {
-        res.status(500).json({
-            message: `Failed to delete log: ${err}`
-        })
+    } catch (err) {
+        res.status(500).json({ msg: `Oh no, server error: ${err}` })
     }
 })
+
+
+//delete credential by USER
+router.delete('/delete/:credId', validateSession, async(req, res)=>{
+    const { id } = req.user;
+    const { credId } = req.params
+    try {
+        const deletedCred = await CredentialModel.destroy({
+            where: { userId: id, id: credId }
+        });
+        res.status(200).json({
+            msg: `Credential deleted.`,
+            deletedCred: deletedCred == 0? `none` : deletedCred
+        })
+    } catch (err) {
+        res.status(500).json({msg: `Oh no, server error: ${err}`})
+    }
+})
+
+// ! ADMIN edit
+router.put('/edit/:credId/admin', validateRole, async (req, res) => {
+    const { npi, med_school, licenses, specialty, bio } = req.body;
+    const { credId } = req.params
+
+    try {
+            const updatedCred = await CredentialModel.update({
+                npi,
+                med_school,
+                licenses,
+                specialty,
+                bio
+            }, { where: { id: credId } });
+            res.status(200).json({
+                msg: `Credential updated`,
+                updatedCred
+            })
+    } catch (err) {
+        res.status(500).json({ msg: `Oh no, server error: ${err}` })
+    }
+})
+
+// ! ADMIN delete
+router.delete('/delete/:credId/admin', validateRole, async(req, res)=>{
+    const { credId } = req.params
+    try {
+        const deletedCred = await CredentialModel.destroy({
+            where: { id: credId }
+        });
+        res.status(200).json({
+            msg: `Credential deleted.`,
+            deletedCred: deletedCred == 0? `none` : deletedCred
+        })
+    } catch (err) {
+        res.status(500).json({msg: `Oh no, server error: ${err}`})
+    }
+})
+
 
 module.exports = router;
 
-// router.get('/all', async(req, res) =>{
-    //     try {
-    //         const allLogs = await LogModel.findAll();
-    //         res.status(200).json(allLogs)
-    //     } catch (error) {
-    //         res.status(500).json({ error: err})
-    //     }
-    // })

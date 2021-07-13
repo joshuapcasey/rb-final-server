@@ -10,7 +10,7 @@ const validateRole = require('../middleware/validate-role');
 
 // ! authenticated routes
 
-//* USER register
+//* Register
 router.post('/register', async(req, res)=>{
     let { firstName, lastName, emailAddress, password, admin  } = req.body.user;
     try {
@@ -43,7 +43,7 @@ router.post('/register', async(req, res)=>{
     }
 });
 
-//* USER login
+//* Login
 router.post('/login', async (req, res) =>{
     let { emailAddress, password } = req.body.user;
 
@@ -103,7 +103,7 @@ router.get('/profile/:id', async(req, res)=>{
 })
 
 //! Get all users by speciality 
-router.get('/view/:specialty', async(req, res)=>{
+router.get('/profile/:specialty', async(req, res)=>{
     try{
         const allUsers = await UserModel.findAll({
             include: [
@@ -120,7 +120,7 @@ router.get('/view/:specialty', async(req, res)=>{
     }
 })
 
-//* USER logged in UPDATE
+//* UPDATE profile logged in user
 router.put('/edit', validateSession, async(req, res)=>{
     try {
         const { firstName, lastName, emailAddress, password, admin,  } = req.body;
@@ -130,12 +130,7 @@ router.put('/edit', validateSession, async(req, res)=>{
             lastName,
             emailAddress,
             password,
-            zipCode,
-            instrument,
-            genre,
             admin,
-            bio,
-            socialLinks,
             }, {where: {id: req.user.id}
         });
         res.status(200).json({
@@ -216,81 +211,3 @@ router.delete('/delete/:id/admin', validateRole, async(req, res)=>{
 })
 
 module.exports = router;
-
-
-
-// router.post("/register", async (req, res) => {
-//     const { email, password} = req.body.user;
-//     try {
-//     const User = await UserModel.create({
-//         email,
-//         password: bcrypt.hashSync(password, 13)
-//     });
-//     const token = jwt.sign(
-//         {id: User.id},
-//         process.env.JWT_SECRET,
-//         { expiresIn: 60 * 60 * 24 }
-//         );
-
-//     res.status(201).json({
-//         msg: 'User successfully registered!',
-//         user: User,
-//         sessionToken: token
-//     });
-
-//     } catch (err) {
-//         if (err instanceof UniqueConstraintError) {
-//             res.status(409).json({
-//                 message: "Email already in use",
-//             });
-//         } else {
-//             res.status(500).json({
-//                 message: "Failed to register user",
-//             });
-//         }
-//     }
-// });
-
-// router.post("/login", async (req, res) => {
-//     const { email, password} = req.body.user;
-
-//     try {
-//         const loginUser = await UserModel.findOne({
-//             where: {
-//                 email: email,
-//             },
-//     });
-
-//     if (loginUser) {
-
-//         const passwordComparison = await bcrypt.compare(password, loginUser.password);
-
-//         if (passwordComparison) {
-            
-//             const token = jwt.sign(
-//                 {id: loginUser.id},
-//                 process.env.JWT_SECRET,
-//                 { expiresIn: 60 * 60 * 24 }
-//                 );
-    
-//             res.status(200).json({
-//                 user: loginUser,
-//                 message: "User successfully logged in!",
-//                 sessionToken: token
-//             });
-//         } else {
-//             res.status(401).json({
-//                 message: 'Incorrect email or password'
-//             });
-//         }
-//         } else {
-//             res.status(401).json({
-//                 message: "Incorrect email or password"
-//             });
-//         }
-//         } catch (error) {
-//         res.status(500).json({
-//             message:"Failed to log user in"
-//         })
-//     }
-// });
