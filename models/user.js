@@ -11,11 +11,11 @@ const User = db.define("user", {
         type: DataTypes.STRING,
         allowNull: false
     },
-    fullName: {
-        type: DataTypes.STRING,
-    },
+    // fullName: {
+    //     type: DataTypes.STRING,
+    // },
     email: {                               
-        type: DataTypes.STRING(100),       
+        type: DataTypes.STRING,       
         allowNull: false,                   
         unique: true,                      
     },

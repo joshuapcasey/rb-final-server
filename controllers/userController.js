@@ -12,13 +12,13 @@ const validateRole = require('../middleware/validate-role');
 
 //* Register
 router.post('/register', async(req, res)=>{
-    let { firstName, lastName, emailAddress, password, admin  } = req.body.user;
+    let { firstName, lastName, email, password, admin  } = req.body.user;
     try {
         const User = await UserModel.create({
             firstName,
             lastName,
             fullName: (firstName + ' ' + lastName),
-            emailAddress,
+            email,
             password: bcrypt.hashSync(password, 13),
             admin: ('User')
         });
@@ -45,12 +45,12 @@ router.post('/register', async(req, res)=>{
 
 //* Login
 router.post('/login', async (req, res) =>{
-    let { emailAddress, password } = req.body.user;
+    let { email, password } = req.body.user;
 
     try {
         let loginUser = await UserModel.findOne({
             where: {
-                emailAddress: emailAddress,
+                email: email,
             },
         });
 
@@ -81,7 +81,7 @@ router.post('/login', async (req, res) =>{
 });
 
 //* USER Profile get by ID
-router.get('/profile/:id', async(req, res)=>{
+router.get('/view/:id', async(req, res)=>{
     const { id } = req.params;
     try {
         const thisUser = await UserModel.findOne({
@@ -103,7 +103,7 @@ router.get('/profile/:id', async(req, res)=>{
 })
 
 //! Get all users by speciality 
-router.get('/profile/:specialty', async(req, res)=>{
+router.get('/view/:specialty', async(req, res)=>{
     try{
         const allUsers = await UserModel.findAll({
             include: [
@@ -123,12 +123,12 @@ router.get('/profile/:specialty', async(req, res)=>{
 //* UPDATE profile logged in user
 router.put('/edit', validateSession, async(req, res)=>{
     try {
-        const { firstName, lastName, emailAddress, password, admin,  } = req.body;
+        const { firstName, lastName, email, password, admin,  } = req.body;
 
         const updatedUser = await UserModel.update({
             firstName,
             lastName,
-            emailAddress,
+            email,
             password,
             admin,
             }, {where: {id: req.user.id}
@@ -146,12 +146,12 @@ router.put('/edit', validateSession, async(req, res)=>{
 router.put('/edit/:id/admin', validateRole, async(req, res)=>{
     const { id } = req.params
     try {
-        const { firstName, lastName, emailAddress, password, admin } = req.body;
+        const { firstName, lastName, email, password, admin } = req.body;
 
         const updatedUser = await UserModel.update({
             firstName,
             lastName,
-            emailAddress,
+            email,
             password,
             admin,
             }, {where: {id: id}

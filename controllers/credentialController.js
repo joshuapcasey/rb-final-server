@@ -33,7 +33,7 @@ router.post('/create', validateSession, async(req, res) =>{
 });
 
 // find all credentials from given user 
-router.get('/profile/user/:userId', validateSession, async(req, res)=>{
+router.get('/view/user/:userId', validateSession, async(req, res)=>{
     const { userId } = req.params
     try {
         const userCred = await CredentialModel.findAll({
