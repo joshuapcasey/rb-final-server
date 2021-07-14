@@ -1,7 +1,6 @@
 const {DataTypes} = require("sequelize");    
 const db = require("../db");      
 
-
 const User = db.define("user", {            
     firstName:{
         type: DataTypes.STRING,
@@ -11,9 +10,6 @@ const User = db.define("user", {
         type: DataTypes.STRING,
         allowNull: false
     },
-    // fullName: {
-    //     type: DataTypes.STRING,
-    // },
     email: {                               
         type: DataTypes.STRING,       
         allowNull: false,                   
@@ -23,7 +19,7 @@ const User = db.define("user", {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    admin:{
+    role:{
         type: DataTypes.ENUM('Admin', 'User'),
         allowNull: false,
     },

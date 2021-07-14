@@ -13,16 +13,15 @@ router.get("/practice", validateSession, (req, res) => {
 
 //post new credential (req authorization)
 router.post('/create', validateSession, async(req, res) =>{
-    const { id, fullName } = req.user;
-    const { npi, med_school, licenses, specialty  } = req.body;
+    const { npi, med_school, licenses, specialty } = req.body.credential;
+    const { id } = req.user;
     const credEntry = {
         npi,
         med_school,
         licenses,
         specialty,
         bio,
-        userId: id,
-        posterName: fullName
+        owner: id,
     }
     try {
         const newCred = await CredentialModel.create(credEntry);

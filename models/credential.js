@@ -11,7 +11,7 @@ const Credential = db.define('credential', {
         allowNull: false
     },
     licenses: {
-        type: DataTypes.STRING,
+        type: DataTypes.ARRAY(DataTypes.TEXT),
         allowNull: false,
     },
     specialty: {

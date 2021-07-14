@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { UserModel } = require('../models');
-const { CredentialModel } = require('../models')
+// const { CredentialModel } = require('../models')
 const { UniqueConstraintError } = require('sequelize/lib/errors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -10,7 +10,12 @@ const validateRole = require('../middleware/validate-role');
 
 // ! authenticated routes
 
-//* Register
+/*
+============================
+    Register User
+============================
+*/
+
 router.post('/register', async(req, res)=>{
     let { firstName, lastName, email, password, admin  } = req.body.user;
     try {
@@ -20,10 +25,10 @@ router.post('/register', async(req, res)=>{
             fullName: (firstName + ' ' + lastName),
             email,
             password: bcrypt.hashSync(password, 13),
-            admin: ('User')
+            role: ('User')
         });
 
-        let token = jwt.sign({ id: User.id, role: User.admin, fullName: User.fullName }, process.env.JWT_SECRET, {expiresIn: 60 * 60 * 24})
+        let token = jwt.sign({ id: User.id }, process.env.JWT_SECRET, {expiresIn: 60 * 60 * 24})
 
         res.status(201).json({
             msg: 'User successfully registered!',
@@ -37,13 +42,18 @@ router.post('/register', async(req, res)=>{
             });
         } else {
             res.status(500).json({
-                msg: `Server failed to register user. err=${err}`
+                msg: `Registration failed due to ${err}`
             })
         }
     }
 });
 
-//* Login
+/*
+============================
+        Login User
+============================
+*/
+
 router.post('/login', async (req, res) =>{
     let { email, password } = req.body.user;
 
@@ -57,7 +67,7 @@ router.post('/login', async (req, res) =>{
         if(loginUser) {
             let passwordComparison = await bcrypt.compare(password, loginUser.password);
             if(passwordComparison){
-                let token = jwt.sign({ id: loginUser.id, role: loginUser.admin, fullName: loginUser.fullName }, process.env.JWT_SECRET, { expiresIn: 60 * 60 * 24})
+                let token = jwt.sign({ id: loginUser.id }, process.env.JWT_SECRET, { expiresIn: 60 * 60 * 24})
                 res.status(200).json({
                     user: loginUser,
                     message: "User successfully logged in!",
@@ -65,22 +75,27 @@ router.post('/login', async (req, res) =>{
                 });
             } else {
                 res.status(401).json({
-                    msg: 'Incorrect email or password'
+                    msg: `Incorrect email or password ${err}`
                 });
             }
         } else {
             res.status(401).json({
-                msg: 'Incorrect email or password'
+                msg: `Incorrect email or password ${err}`
             })
         }
     } catch (err) {
         res.status(500).json({
-            msg: 'Failed to log user in.'
+            msg: `User login failed ${err}`
         })
     }
 });
 
-//* USER Profile get by ID
+/*
+============================
+    User Profile Get by ID
+============================
+*/
+
 router.get('/view/:id', async(req, res)=>{
     const { id } = req.params;
     try {
@@ -102,7 +117,35 @@ router.get('/view/:id', async(req, res)=>{
     }
 })
 
-//! Get all users by speciality 
+/*
+===============================
+    Get All Users 
+===============================
+*/
+
+router.get('/', async(req, res)=>{
+    try{
+        const allUsers = await UserModel.findAll({
+            // include: [
+            //     {
+            //         model: CredentialModel
+            //     }
+            // ]
+        });
+        res.status(200).json(allUsers);
+    } catch (err) {
+        res.status(500).json({
+            msg: `Oh no! Server error: ${err}`
+        })
+    }
+})
+
+/*
+===============================
+    Get All Users by Specialty
+===============================
+*/
+
 router.get('/view/:specialty', async(req, res)=>{
     try{
         const allUsers = await UserModel.findAll({
@@ -120,17 +163,22 @@ router.get('/view/:specialty', async(req, res)=>{
     }
 })
 
-//* UPDATE profile logged in user
+/*
+===============================
+    Update Logged In User
+===============================
+*/
+
 router.put('/edit', validateSession, async(req, res)=>{
     try {
-        const { firstName, lastName, email, password, admin,  } = req.body;
+        const { firstName, lastName, email, password } = req.body;
 
         const updatedUser = await UserModel.update({
             firstName,
             lastName,
             email,
             password,
-            admin,
+            // role,
             }, {where: {id: req.user.id}
         });
         res.status(200).json({
@@ -142,18 +190,48 @@ router.put('/edit', validateSession, async(req, res)=>{
     }
 })
 
-//* ADMIN update user by id
+/*
+===============================
+    Delete Logged In User
+===============================
+*/
+router.delete('/delete', validateSession, async(req, res)=>{
+
+    try {
+        // const deletedCredential = await CredentialModel.destroy({
+        //     where: { userId: req.user.id }
+        // });
+        const deletedUser = await UserModel.destroy({
+            where: { id: req.user.id},
+        });
+        res.status(200).json({
+            msg: `User deleted (sad)`,
+            deletedUser: deletedUser,
+            // deletedCredential: deletedCredential == 0? `no credentials to delete` : deletedCredential,
+        })
+    } catch (err) {
+        res.status(500).json({
+            msg: `Error: ${err}`
+        })
+    }
+})
+
+/*
+===============================
+    ADMIN Edit User
+===============================
+*/
 router.put('/edit/:id/admin', validateRole, async(req, res)=>{
     const { id } = req.params
     try {
-        const { firstName, lastName, email, password, admin } = req.body;
+        const { firstName, lastName, email, password, } = req.body;
 
         const updatedUser = await UserModel.update({
             firstName,
             lastName,
             email,
             password,
-            admin,
+            // role,
             }, {where: {id: id}
         });
         res.status(200).json({
@@ -165,43 +243,27 @@ router.put('/edit/:id/admin', validateRole, async(req, res)=>{
     }
 })
 
-//* USER Logged in delete
-router.delete('/delete', validateSession, async(req, res)=>{
 
-    try {
-        const deletedCredential = await CredentialModel.destroy({
-            where: { userId: req.user.id }
-        });
-        const deletedUser = await UserModel.destroy({
-            where: { id: req.user.id},
-        });
-        res.status(200).json({
-            msg: `User deleted (sad)`,
-            deletedUser: deletedUser,
-            deletedCredential: deletedCredential == 0? `no credentials to delete` : deletedCredential,
-        })
-    } catch (err) {
-        res.status(500).json({
-            msg: `Error: ${err}`
-        })
-    }
-})
 
-// ! ADMIN delete
+/*
+===============================
+    ADMIN Delete User
+===============================
+*/
 router.delete('/delete/:id/admin', validateRole, async(req, res)=>{
     const { id } = req.params;
     
     try {
-        const deletedCredential = await CredentialModel.destroy({
-            where: { userId: req.user.id }
-        });
+        // const deletedCredential = await CredentialModel.destroy({
+        //     where: { userId: req.user.id }
+        // });
         const deletedUser = await UserModel.destroy({
             where: { id: id},
         });
         res.status(200).json({
             msg: `User deleted (sad)`,
             deletedUser: deletedUser,
-            deletedCredential: deletedCredential == 0? `no credentials to delete` : deletedCredential,
+            // deletedCredential: deletedCredential == 0? `no credentials to delete` : deletedCredential,
         })
     } catch (err) {
         res.status(500).json({
