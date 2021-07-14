@@ -17,7 +17,7 @@ const validateRole = require('../middleware/validate-role');
 */
 
 router.post('/register', async(req, res)=>{
-    let { firstName, lastName, email, password, admin  } = req.body.user;
+    let { firstName, lastName, email, password, role  } = req.body.user;
     try {
         const User = await UserModel.create({
             firstName,
