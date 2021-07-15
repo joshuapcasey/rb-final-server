@@ -1,5 +1,4 @@
-![KYROS](logo.png)
-# KYROS - Server
+# KYROS - Server ![KYROS](logo.png)
 ---
 ### What is it?
 This is the respoistory for the server-side of KYROS. A social app geared towards physicians that focuses on warehousing all of their credentials in a single profile while connecting them with other practicioners and relevant publications.
