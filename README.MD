@@ -1,3 +1,4 @@
+![KYROS](logo.png)
 # KYROS - Server
 ---
 ### What is it?
